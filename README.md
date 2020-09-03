@@ -1,3 +1,104 @@
+## Darknet을 colab에서 사용하기
+
+<hr>
+
+
+colab pro를 사용하여 GPU는 Tesla V100-SXM2-16GB  로 나오게 된다.
+
+```python
+!nvcc --version
+print("===============================================================================")
+!nvidia-smi
+```
+
+```python
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2019 NVIDIA Corporation
+Built on Sun_Jul_28_19:07:16_PDT_2019
+Cuda compilation tools, release 10.1, V10.1.243
+===============================================================================
+Thu Sep  3 05:17:43 2020       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 450.66       Driver Version: 418.67       CUDA Version: 10.1     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla V100-SXM2...  Off  | 00000000:00:04.0 Off |                    0 |
+| N/A   35C    P0    23W / 300W |      0MiB / 16130MiB |      0%      Default |
+|                               |                      |                 ERR! |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+```
+
+<hr>
+
+
+## Colab에서 구동하는 코드를 내 깃허브에 올릴때
+
+https://github.com/AlexeyAB/darknet 이 사람의 코드를 가져와서 나에게 맞게끔 수정후 깃허브에 올릴때는 .git 폴더를 삭제후 push 해야 한다. 안그러면 충돌남 !!
+
+<hr>
+
+
+## git bash창에서 퍼미션 변경하기
+
+alexyab_new.ipynb 코드 실행시 `!./build.sh` 이 코드에서 문제가 있었는데 git bash 창에서 
+`git ls-tree HEAD` 이 명령어 사용하면 아래와 같이 나온다.
+
+```bash
+user@YOURPCNAME ~/anyfolder (master)
+$ git ls-tree HEAD
+100644 blob dfd5446b47dec059d2d8a3e3831ec95b707e0441    build.sh
+
+```
+
+build.sh 파일을 `ls -al` 명령어로 확인하면 
+`-rwxr-xr-x 1 user 197121   2044  9월  3 14:34 build.sh*` 이렇게 퍼미션이 755인걸 확인할 수 있지만 github에 push, colab 환경에서 clone 해서 `ls -al` 명령어로 보면
+`-rw-r--r--  1 root root    2044 Sep  3 05:41 **build.sh*** ` 퍼미션이 이런식으로 644로 변한걸 볼 수 있다. 
+
+### github에 퍼미션 755인 상태로 올리는법!
+
+```bash
+user@YOURPCNAME ~/anyfolder (master)
+$ cd .git
+
+user@YOURPCNAME ~/anyfolder/.git (GIT_DIR!)
+$ vim config
+```
+
+github에 올리려는 폴더로 이동후 `ls -al`로 숨겨져 있는 .git 폴더로 이동한다.
+
+config 창에서 filemode가 true인지 확인하고 아니면 false로 수정한다.
+
+```bash
+$ git update-index --chmod=+x build.sh
+```
+
+이 명령어로 build.sh의 퍼미션을 755로 바꿀 수 있다.
+
+```bash
+$ git ls-tree HEAD
+```
+
+다시 확인해보면 아래와 같이 변한걸 볼 수 있다. 
+
+```bash
+user@YOURPCNAME ~/anyfolder (master)
+$ git ls-tree HEAD
+100755 blob dfd5446b47dec059d2d8a3e3831ec95b707e0441    build.sh
+```
+
+<hr>
+
 # Yolo v4, v3 and v2 for Windows and Linux
 
 ## (neural networks for object detection)
@@ -364,9 +465,9 @@ Training Yolo v4 (and v3):
   * https://github.com/AlexeyAB/darknet/blob/6e5bdf1282ad6b06ed0e962c3f5be67cf63d96dc/cfg/Gaussian_yolov3_BDD.cfg#L789
 
 So if `classes=1` then should be `filters=18`. If `classes=2` then write `filters=21`.
-  
+
 **(Do not write in the cfg-file: filters=(classes + 5)x3)**
-  
+
 (Generally `filters` depends on the `classes`, `coords` and number of `mask`s, i.e. filters=`(classes + coords + 1)*<number of mask>`, where `mask` is indices of anchors. If `mask` is absence, then filters=`(classes + coords + 1)*num`)
 
 So for example, for 2 objects, your file `yolo-obj.cfg` should differ from `yolov4-custom.cfg` in such lines in each of **3** [yolo]-layers:
@@ -429,11 +530,10 @@ It will create `.txt`-file for each `.jpg`-image-file - in the same directory an
     * for `yolov3-tiny-prn.cfg , yolov3-tiny.cfg` (6 MB): [yolov3-tiny.conv.11](https://drive.google.com/file/d/18v36esoXCh-PsOKwyP2GWrpYDptDY8Zf/view?usp=sharing)
     * for `enet-coco.cfg (EfficientNetB0-Yolov3)` (14 MB): [enetb0-coco.conv.132](https://drive.google.com/file/d/1uhh3D6RSn0ekgmsaTcl-ZW53WBaUDo6j/view?usp=sharing)
     
-
 8. Start training by using the command line: `darknet.exe detector train data/obj.data yolo-obj.cfg yolov4.conv.137`
-     
+   
    To train on Linux use command: `./darknet detector train data/obj.data yolo-obj.cfg yolov4.conv.137` (just use `./darknet` instead of `darknet.exe`)
-     
+   
    * (file `yolo-obj_last.weights` will be saved to the `build\darknet\x64\backup\` for each 100 iterations)
    * (file `yolo-obj_xxxx.weights` will be saved to the `build\darknet\x64\backup\` for each 1000 iterations)
    * (to disable Loss-Window use `darknet.exe detector train data/obj.data yolo-obj.cfg yolov4.conv.137 -dont_show`, if you train on computer without monitor like a cloud Amazon EC2)
@@ -448,15 +548,15 @@ It will create `.txt`-file for each `.jpg`-image-file - in the same directory an
     (in the original repository https://github.com/pjreddie/darknet the weights-file is saved only once every 10 000 iterations `if(iterations > 1000)`)
 
  * Also you can get result earlier than all 45000 iterations.
- 
+
  **Note:** If during training you see `nan` values for `avg` (loss) field - then training goes wrong, but if `nan` is in some other lines - then training goes well.
- 
+
  **Note:** If you changed width= or height= in your cfg-file, then new width and height must be divisible by 32.
- 
+
  **Note:** After training use such command for detection: `darknet.exe detector test data/obj.data yolo-obj.cfg yolo-obj_8000.weights`
- 
+
   **Note:** if error `Out of memory` occurs then in `.cfg`-file you should increase `subdivisions=16`, 32 or 64: [link](https://github.com/AlexeyAB/darknet/blob/0039fd26786ab5f71d5af725fc18b3f521e7acfd/cfg/yolov3.cfg#L4)
- 
+
 ### How to train tiny-yolo (to detect your custom objects):
 
 Do all the same steps as for the full yolo model as described above. With the exception of:
@@ -467,7 +567,7 @@ Do all the same steps as for the full yolo model as described above. With the ex
 
 For training Yolo based on other models ([DenseNet201-Yolo](https://github.com/AlexeyAB/darknet/blob/master/build/darknet/x64/densenet201_yolo.cfg) or [ResNet50-Yolo](https://github.com/AlexeyAB/darknet/blob/master/build/darknet/x64/resnet50_yolo.cfg)), you can download and get pre-trained weights as showed in this file: https://github.com/AlexeyAB/darknet/blob/master/build/darknet/x64/partial.cmd
 If you made you custom model that isn't based on other models, then you can train it without pre-trained weights, then will be used random initial weights.
- 
+
 ## When should I stop training:
 
 Usually sufficient 2000 iterations for each class(object), but not less than number of training images and not less than 6000 iterations in total. But for a more precise definition when you should stop training, use the following manual:
@@ -484,7 +584,7 @@ Usually sufficient 2000 iterations for each class(object), but not less than num
   * **0.60730 avg** - average loss (error) - **the lower, the better**
 
   When you see that average loss **0.xxxxxx avg** no longer decreases at many iterations then you should stop training. The final avgerage loss can be from `0.05` (for a small model and easy dataset) to `3.0` (for a big model and a difficult dataset).
-  
+
   Or if you train with flag `-map` then you will see mAP indicator `Last accuracy mAP@0.5 = 18.50%` in the console - this indicator is better than Loss, so train while mAP increases. 
 
 2. Once training is stopped, you should take some of last `.weights`-files from `darknet\build\darknet\x64\backup` and choose the best of them:
